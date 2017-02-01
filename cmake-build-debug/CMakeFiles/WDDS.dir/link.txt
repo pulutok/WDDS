@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   CMakeFiles/WDDS.dir/main.cpp.o CMakeFiles/WDDS.dir/Scanner.cpp.o CMakeFiles/WDDS.dir/customDefines.cpp.o CMakeFiles/WDDS.dir/WDDS.cpp.o CMakeFiles/WDDS.dir/DBConnector.cpp.o  -o WDDS /usr/lib/x86_64-linux-gnu/libpcap.so /usr/lib/x86_64-linux-gnu/libboost_system.so /usr/lib/x86_64-linux-gnu/libboost_filesystem.so 
