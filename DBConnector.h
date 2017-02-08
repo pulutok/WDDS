@@ -18,9 +18,8 @@ public:
     DBConnector();
     ~DBConnector();
 
-    bool initialize(std::string db_server_ip, std::string db_user, std::string db_pwd, std::string db_name, int port);
+    bool initialize(std::string db_server_ip, std::string db_user, std::string db_pwd, std::string db_name, unsigned int port);
     void disconnection();
-
     bool is_initialized();
 };
 
