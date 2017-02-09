@@ -25,8 +25,9 @@ typedef struct ieee80211_wlan_management {
 } IEEE80211 ;
 #pragma pack(pop)
 
-struct wdds_log {
-    u_int timestamp;
+typedef struct wdds_log {
+    u_int channel;
     std::string src_mac;
-    std::string dst_mac;
-};
+    float strength;
+    u_int timestamp;
+} WDDS_LOG ;

@@ -4,6 +4,11 @@
 #pragma once
 
 #include "Scanner.h"
+#include "DBConnector.h"
+#include "customDefines.cpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp>
+#include <mutex>
 #include <queue>
 
 #ifndef WDDS_WDDS_H
@@ -11,14 +16,25 @@
 
 class WDDS {
 private:
+    bool m_endFlag;
     u_int m_channel;
     std::string m_device;
-    std::queue<char *> *m_input_queue;
-    std::queue<char *> *m_output_queue;
-    void swap_queue();
-    void packet_handler(pcap_pkthdr *, char *data);
+
+    std::queue<char *> *m_rawInputQueue;
+    std::queue<char *> *m_rawOutputQueue;
+    std::mutex m_rawQueueMutex;
+
+    std::queue<WDDS_LOG> *m_parsedInputQueue;
+    std::queue<WDDS_LOG> *m_parsedOutputQueue;
+    std::mutex m_parsedQueueMutex;
+
+    void SwapRawQueue();
+    void SwapParsedQueue();
+    void PacketHandler(pcap_pkthdr *pkthdr, char *data);
+    void Parsing();
+    void Logging();
 public:
-    WDDS(const char *, u_int);
+    WDDS(const char *device, u_int channel);
     ~WDDS();
     void start();
 };
