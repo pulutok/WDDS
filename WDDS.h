@@ -8,6 +8,7 @@
 #include "customDefines.cpp"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/
 #include <mutex>
 #include <queue>
 
@@ -28,13 +29,19 @@ private:
     std::queue<WDDS_LOG> *m_parsedOutputQueue;
     std::mutex m_parsedQueueMutex;
 
+    std::string DB_SERVER;
+    int DB_PORT;
+    std::string DB_USER;
+    std::string DB_PASS;
+    std::string DB_NAME;
+
     void SwapRawQueue();
     void SwapParsedQueue();
     void PacketHandler(pcap_pkthdr *pkthdr, char *data);
     void Parsing();
     void Logging();
 public:
-    WDDS(const char *device, u_int channel);
+    WDDS(const char *device, u_int channel, std::string config);
     ~WDDS();
     void start();
 };

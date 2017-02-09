@@ -5,7 +5,7 @@
 #include "WDDS.h"
 
 // Initializer
-WDDS::WDDS(const char *device, u_int channel)
+WDDS::WDDS(const char *device, u_int channel, std::string config)
         : m_rawInputQueue(new std::queue<char *>),
           m_rawOutputQueue(new std::queue<char *>),
           m_parsedInputQueue(new std::queue<WDDS_LOG>),
@@ -14,7 +14,7 @@ WDDS::WDDS(const char *device, u_int channel)
           m_channel(channel),
           m_endFlag(false)
 {
-
+    // Todo : .ini file parsing and save configure
 };
 
 // Destructor
@@ -99,5 +99,5 @@ void WDDS::Logging()
 
 void WDDS::start()
 {
-    // Todo : Create Scanner, Parsing, Logging Thread & Get input and set m_endFlag true
+    // Todo : Create Scanner/Parser/Logger Thread & when input, set m_endFlag true
 }
