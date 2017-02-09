@@ -1,3 +1,0 @@
-/opt/git/WDDS/cmake-build-debug/CMakeFiles/edit_cache.dir
-/opt/git/WDDS/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/opt/git/WDDS/cmake-build-debug/CMakeFiles/WDDS.dir

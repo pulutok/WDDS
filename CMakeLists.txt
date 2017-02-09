@@ -3,6 +3,7 @@ project(WDDS)
 set(CMAKE_CXX_STANDARD 11)
 
 include(cmake-build-debug/FindPCAP.cmake)
+include(cmake-build-debug/FindMYSQL.cmake)
 
 set(SOURCE_FILES main.cpp Scanner.cpp Scanner.h customDefines.cpp WDDS.cpp WDDS.h DBConnector.cpp DBConnector.h)
 add_executable(WDDS ${SOURCE_FILES})
@@ -26,5 +27,10 @@ if(Boost_FOUND)
     target_link_libraries(WDDS ${Boost_LIBRARIES})
 endif()
 
+if(MYSQL_FOUND)
+    message(STATUS "MYSQL_INCLUDE_DIRS: ${MYSQL_INCLUDE_DIR}")
+    message(STATUS "MYSQL_LIBRARIES: ${MYSQL_LIBRARIES}")
 
-
+    include_directories(${MYSQL_INCLUDE_DIR})
+    target_link_libraries(WDDS ${MYSQL_LIBRARIES})
+endif()
