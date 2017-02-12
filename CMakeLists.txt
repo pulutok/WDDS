@@ -3,9 +3,9 @@ project(WDDS)
 set(CMAKE_CXX_STANDARD 11)
 
 include(cmake-build-debug/FindPCAP.cmake)
-include(cmake-build-debug/FindMYSQL.cmake)
+include(cmake-build-debug/FindMySQL.cmake)
 
-set(SOURCE_FILES main.cpp Scanner.cpp Scanner.h customDefines.cpp WDDS.cpp WDDS.h DBConnector.cpp DBConnector.h)
+set(SOURCE_FILES main.cpp Scanner.cpp Scanner.h CustomDefines.h WDDS.cpp WDDS.h DBConnector.cpp DBConnector.h)
 add_executable(WDDS ${SOURCE_FILES})
 
 if(PCAP_FOUND)
@@ -15,8 +15,7 @@ if(PCAP_FOUND)
     target_link_libraries(WDDS ${PCAP_LIBRARY})
 endif()
 
-
-find_package(Boost 1.57.0 COMPONENTS system filesystem REQUIRED)
+find_package(Boost 1.58.0 COMPONENTS system filesystem REQUIRED)
 
 if(Boost_FOUND)
     message(STATUS "Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}")

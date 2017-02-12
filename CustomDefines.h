@@ -1,6 +1,8 @@
 //
 // Created by skyclad on 1/24/17.
 //
+#pragma once
+
 #include <sys/param.h>
 #include <string>
 
