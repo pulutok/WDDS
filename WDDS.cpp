@@ -71,6 +71,21 @@ void WDDS::PacketHandler(pcap_pkthdr *pkthdr, char *data)
     m_rawQueueMutex.unlock();
 }
 
+void WDDS::Scanning()
+{
+    // Todo : Scanning with Scanner
+    Scanner scanner(m_device.c_str());
+    try{
+        scanner.scanWithCallback(PacketHandler, 0, 100, m_endFlag);
+    }
+    catch( ... )
+    {
+        std::cerr << "[-] Unexpected Error in Scanner" << std::endl;
+        m_endFlag = true;
+    }
+
+};
+
 void WDDS::Parsing()
 {
     while(!m_endFlag)
@@ -86,6 +101,7 @@ void WDDS::Parsing()
             //
             m_rawOutputQueue->pop();
         }
+        SwapParsedQueue();
     }
 }
 
@@ -133,5 +149,13 @@ void WDDS::Logging()
 
 void WDDS::start()
 {
+    std::string input;
     // Todo : Create Scanner/Parser/Logger Thread & when input, set m_endFlag true
+    std::thread hScanThread(&Scanning);
+    std::thread hParseThread(&Parsing);
+    std::thread hLogThread(&Logging);
+
+    hScanThread.join();
+    hParseThread.join();
+    hLogThread.join();
 }

@@ -40,6 +40,7 @@ private:
     void SwapRawQueue();
     void SwapParsedQueue();
     void PacketHandler(pcap_pkthdr *pkthdr, char *data);
+    void Scanning();
     void Parsing();
     void Logging();
 public:

@@ -20,7 +20,7 @@ Scanner::~Scanner()
     delete [] m_errbuf;
 }
 
-void Scanner::scanWithCallback(PacketCallbackHandler handler, int timeout, int count) {
+void Scanner::scanWithCallback(PacketCallbackHandler handler, int timeout, int count, bool &endFlag) {
     std::clog << "[*] Scanning Started" << std::endl;
     u_int packet_count = 0;
 
@@ -31,7 +31,7 @@ void Scanner::scanWithCallback(PacketCallbackHandler handler, int timeout, int c
     if(count == 0)
         endless_flag = true;
 
-    while( endless_flag || packet_count < count ) { // If count == 0, endless loop
+    while( !endFlag && ( endless_flag || packet_count < count ) ) { // If count == 0, endless loop
         int res = pcap_next_ex(m_pcap_handle, &pkthdr, (const u_char **)&packet_data);
         if( res == 0 ) continue; // Nothing captured
         if( res < 0 ) {  // Error Occured

@@ -24,7 +24,7 @@ private:
     pcap_t *m_pcap_handle;
     std::string m_device;
 public:
-    void scanWithCallback(PacketCallbackHandler handler, int timeout, int count);
+    void scanWithCallback(PacketCallbackHandler handler, int timeout, int count, bool &end_flag);
     Scanner(const char *dev);
     ~Scanner();
 };
