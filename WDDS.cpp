@@ -66,7 +66,7 @@ void WDDS::Parsing()
 {
     while(!m_endFlag)
     {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(60000));     // Sleep This thread 60 seconds
+        std::this_thread::sleep_for(std::chrono::seconds(60));     // Sleep This thread 60 seconds
         SwapRawQueue();
         char *raw_packet;
         while (!m_rawOutputQueue->empty()) {
@@ -84,7 +84,7 @@ void WDDS::Logging()
 {
     while(!m_endFlag)
     {
-        boost::this_thread::sleep(boost::posix_time::milliseconds(10000));     // Sleep This thread 10 seconds
+        std::this_thread::sleep_for(std::chrono::seconds(10));    // Sleep This thread 10 seconds
         WDDS_LOG parsed_packet;
         while (!m_parsedOutputQueue->empty()) {
             // Todo : Connect to DB

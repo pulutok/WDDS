@@ -10,7 +10,7 @@
 #include <boost/function.hpp>
 
 #include <pcap/pcap.h>
-#include "customDefines.cpp"
+#include "CustomDefines.h"
 
 
 #ifndef WDDS_SCANNER_H
