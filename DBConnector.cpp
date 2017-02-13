@@ -34,7 +34,7 @@ void DBConnector::Disconnection()
 }
 
 bool DBConnector::Initialize(std::string dbServerIp, std::string dbUser, std::string dbPwd, std::string dbName,
-                             unsigned int port)
+                             int port)
 {
     bool result = false;
 
@@ -42,7 +42,7 @@ bool DBConnector::Initialize(std::string dbServerIp, std::string dbUser, std::st
     {
         m_pConnection = new MYSQL;
         mysql_init(m_pConnection);
-        if(mysql_real_connect(m_pConnection, dbServerIp.c_str(), dbUser.c_str(), dbPwd.c_str(), dbName.c_str(), port, nullptr, 0))
+        if(mysql_real_connect(m_pConnection, dbServerIp.c_str(), dbUser.c_str(), dbPwd.c_str(), dbName.c_str(), (unsigned)port, nullptr, 0))
         {
             m_initConn = true;
             result = true;
@@ -96,7 +96,7 @@ bool DBConnector::CreateBind(int size)
     return result;
 }
 
-bool DBConnector::SetBind(int arrayOffset, enum_field_types fieldType, void *buffer, unsigned int bufferLength, my_bool *is_null,
+bool DBConnector::SetBind(int arrayOffset, enum_field_types fieldType, void *buffer, unsigned long bufferLength, my_bool *is_null,
                           unsigned long *gottenLength)
 {
     bool result = true;

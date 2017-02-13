@@ -6,7 +6,10 @@
 #include "Scanner.h"
 #include "DBConnector.h"
 #include "CustomDefines.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <chrono>
+#include <string>
 #include <thread>
 #include <mutex>
 #include <queue>
@@ -28,11 +31,11 @@ private:
     std::queue<WDDS_LOG> *m_parsedOutputQueue;
     std::mutex m_parsedQueueMutex;
 
-    std::string DB_SERVER;
-    int DB_PORT;
-    std::string DB_USER;
-    std::string DB_PASS;
-    std::string DB_NAME;
+    std::string m_DBServer;
+    int m_DBPort;
+    std::string m_DBUser;
+    std::string m_DBPass;
+    std::string m_DBName;
 
     void SwapRawQueue();
     void SwapParsedQueue();

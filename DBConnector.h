@@ -22,14 +22,14 @@ public:
     DBConnector();
     ~DBConnector();
 
-    bool Initialize(std::string dbServerIp, std::string dbUser, std::string dbPwd, std::string dbName, unsigned int port);
+    bool Initialize(std::string dbServerIp, std::string dbUser, std::string dbPwd, std::string dbName, int port);
     bool IsInitialized();
     void Disconnection();
 
     bool SetStmt();
     bool PrepareStmt(std::string& query);
     bool CreateBind(int size);
-    bool SetBind(int arrayOffset, enum_field_types fieldType, void *buffer, unsigned int bufferLength, my_bool *is_null, unsigned long *gottenLength);
+    bool SetBind(int arrayOffset, enum_field_types fieldType, void *buffer, unsigned long bufferLength, my_bool *is_null, unsigned long *gottenLength);
     bool execute();
 };
 
