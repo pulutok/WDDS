@@ -5,40 +5,24 @@
 #include "Scanner.h"
 
 // Initializer
-Scanner::Scanner(const char *dev) : m_device(dev), m_errbuf(new char[PCAP_ERRBUF_SIZE])
+Scanner::Scanner(const char *dev) : m_device(dev)
 {
-    m_pcap_handle = pcap_open_live(m_device.c_str(), MAX_BUF_LEN, 1, 10, m_errbuf);
-    if(m_pcap_handle == NULL) {
-        std::cerr << "[-] Couldn't open device\n\t=>" << m_errbuf << std::endl;
-        throw;
-    }
 }
 
 // Destructor
 Scanner::~Scanner()
 {
-    delete [] m_errbuf;
 }
 
-void Scanner::scanWithCallback(PacketCallbackHandler handler, int timeout, int count, bool &endFlag) {
+void Scanner::changeChannel(int channelTo) {
+    char chan[64] = {0};
+    sprintf(chan, "iwconfig wlan0 channel %d", channelTo);
+    system(chan);
+    std::clog << "[*] Channel Changed To : " << chan << std::endl;
+}
+
+void Scanner::scanWithCallback(bool (*PacketCallbackHandler)(Tins::PDU&)) {
     std::clog << "[*] Scanning Started" << std::endl;
-    u_int packet_count = 0;
-
-    pcap_pkthdr *pkthdr;
-    u_char *packet_data;
-    bool endless_flag = false;
-
-    if(count == 0)
-        endless_flag = true;
-
-    while( !endFlag && ( endless_flag || packet_count < count ) ) { // If count == 0, endless loop
-        int res = pcap_next_ex(m_pcap_handle, &pkthdr, (const u_char **)&packet_data);
-        if( res == 0 ) continue; // Nothing captured
-        if( res < 0 ) {  // Error Occured
-            std::cerr << "[-] Packet Capture Error : "  << pcap_geterr(m_pcap_handle) << std::endl;
-            break;
-        }
-        ++packet_count;
-        handler(pkthdr, packet_data);
-    }
+    Tins::Sniffer sniffer(m_device, Tins::Sniffer::promisc_type::NON_PROMISC, "", true);
+    sniffer.sniff_loop(Tins::make_sniffer_handler(this, PacketCallbackHandler));
 }

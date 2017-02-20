@@ -5,9 +5,9 @@
 #include "WDDS.h"
 
 // Initializer
-WDDS::WDDS(const char *device, u_int channel, std::string config)
-        : m_rawInputQueue(new std::queue<char *>),
-          m_rawOutputQueue(new std::queue<char *>),
+WDDS::WDDS(const char *device, u_int channel, std::string configFile)
+        : m_rawInputQueue(new std::queue<Tins::PDU>),
+          m_rawOutputQueue(new std::queue<Tins::PDU>),
           m_parsedInputQueue(new std::queue<WDDS_LOG>),
           m_parsedOutputQueue(new std::queue<WDDS_LOG>),
           m_device(device),
@@ -16,7 +16,7 @@ WDDS::WDDS(const char *device, u_int channel, std::string config)
 {
     // Todo : .ini file parsing and save configure
     boost::property_tree::ptree pt;
-    boost::property_tree::ini_parser::read_ini(config, pt);
+    boost::property_tree::ini_parser::read_ini(configFile, pt);
 
     m_DBServer = pt.get<std::string>("Database.DB_SERVER");
     m_DBPort   = pt.get<int>("Database.DB_PORT");
@@ -39,7 +39,7 @@ void WDDS::SwapRawQueue()
 {
     m_rawQueueMutex.lock();
     // Critical section start
-    std::queue<char *> *tmp;
+    std::queue<Tins::PDU> *tmp;
     tmp = m_rawInputQueue;
     m_rawInputQueue = m_rawOutputQueue;
     m_rawOutputQueue = tmp;
@@ -59,16 +59,14 @@ void WDDS::SwapParsedQueue()
     m_parsedQueueMutex.unlock();
 }
 
-void WDDS::PacketHandler(pcap_pkthdr *pkthdr, char *data)
+bool WDDS::PacketHandler(Tins::PDU& pdu)
 {
-    char *input_data = new char( sizeof(pkthdr) + pkthdr->caplen );
-    memcpy(input_data, pkthdr, sizeof(pkthdr));
-    memcpy(input_data + sizeof(pkthdr), data, pkthdr->caplen);
     m_rawQueueMutex.lock();
     // Critical section start
-    m_rawInputQueue->push(input_data);
+    m_rawInputQueue->push(pdu);
     // Critical section end
     m_rawQueueMutex.unlock();
+    return true;
 }
 
 void WDDS::Scanning()
@@ -76,14 +74,14 @@ void WDDS::Scanning()
     // Todo : Scanning with Scanner
     Scanner scanner(m_device.c_str());
     try{
-        scanner.scanWithCallback(PacketHandler, 0, 100, m_endFlag);
+        scanner.changeChannel(m_channel);
+        scanner.scanWithCallback(PacketHandler);
     }
     catch( ... )
     {
         std::cerr << "[-] Unexpected Error in Scanner" << std::endl;
         m_endFlag = true;
     }
-
 };
 
 void WDDS::Parsing()
@@ -92,13 +90,19 @@ void WDDS::Parsing()
     {
         std::this_thread::sleep_for(std::chrono::seconds(60));     // Sleep This thread 60 seconds
         SwapRawQueue();
-        char *raw_packet;
+        Tins::PDU pdu;
         while (!m_rawOutputQueue->empty()) {
 
-            raw_packet = m_rawOutputQueue->front();
+            pdu = m_rawOutputQueue->front();
             // Todo : Parsing & Input Parsed data to Queue
+            WDDS_LOG wdds_log;
+            wdds_log.strength  = 10;
+            wdds_log.src_mac   = "AA:BB:CC:CC:BB:AA";
+            wdds_log.channel   = m_channel;
+            wdds_log.timestamp = 11111111;
             //
             //
+            m_parsedInputQueue->push(wdds_log);
             m_rawOutputQueue->pop();
         }
         SwapParsedQueue();

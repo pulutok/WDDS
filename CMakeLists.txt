@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(WDDS)
 set(CMAKE_CXX_STANDARD 11)
 
+include(cmake-build-debug/FindTins.cmake)
 include(cmake-build-debug/FindPCAP.cmake)
 include(cmake-build-debug/FindMySQL.cmake)
 
@@ -32,4 +33,11 @@ if(MYSQL_FOUND)
 
     include_directories(${MYSQL_INCLUDE_DIR})
     target_link_libraries(WDDS ${MYSQL_LIBRARIES})
+endif()
+
+if(TINS_FOUND)
+    message(STATUS "TINS_INCLUDE_DIR: ${TINS_INCLUDE_DIR}")
+    message(STATUS "TINS_LIBRARIES: ${TINS_LIBRARIES}")
+    include_directories(${TINS_INCLUDE_DIR})
+    target_link_libraries(WDDS ${TINS_LIBRARIES})
 endif()

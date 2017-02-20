@@ -23,8 +23,8 @@ private:
     u_int m_channel;
     std::string m_device;
 
-    std::queue<char *> *m_rawInputQueue;
-    std::queue<char *> *m_rawOutputQueue;
+    std::queue<Tins::PDU> *m_rawInputQueue;
+    std::queue<Tins::PDU> *m_rawOutputQueue;
     std::mutex m_rawQueueMutex;
 
     std::queue<WDDS_LOG> *m_parsedInputQueue;
@@ -39,12 +39,12 @@ private:
 
     void SwapRawQueue();
     void SwapParsedQueue();
-    void PacketHandler(pcap_pkthdr *pkthdr, char *data);
+    bool PacketHandler(Tins::PDU&);
     void Scanning();
     void Parsing();
     void Logging();
 public:
-    WDDS(const char *device, u_int channel, std::string config);
+    WDDS(const char *device, u_int channel, std::string configFile);
     ~WDDS();
     void start();
 };
