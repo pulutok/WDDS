@@ -23,10 +23,6 @@ private:
     u_int m_channel;
     std::string m_device;
 
-    std::queue<Tins::PDU> *m_rawInputQueue;
-    std::queue<Tins::PDU> *m_rawOutputQueue;
-    std::mutex m_rawQueueMutex;
-
     std::queue<WDDS_LOG> *m_parsedInputQueue;
     std::queue<WDDS_LOG> *m_parsedOutputQueue;
     std::mutex m_parsedQueueMutex;
@@ -37,11 +33,10 @@ private:
     std::string m_DBPass;
     std::string m_DBName;
 
-    void SwapRawQueue();
     void SwapParsedQueue();
     bool PacketHandler(Tins::PDU&);
     void Scanning();
-    void Parsing();
+    void Parsing(Tins::PDU& pdu);
     void Logging();
 public:
     WDDS(const char *device, u_int channel, std::string configFile);

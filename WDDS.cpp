@@ -5,9 +5,7 @@
 #include "WDDS.h"
 
 // Initializer
-WDDS::WDDS(const char *device, u_int channel, std::string configFile)
-        : m_rawInputQueue(new std::queue<Tins::PDU>),
-          m_rawOutputQueue(new std::queue<Tins::PDU>),
+WDDS::WDDS(const char *device, u_int channel, std::string configFile) :
           m_parsedInputQueue(new std::queue<WDDS_LOG>),
           m_parsedOutputQueue(new std::queue<WDDS_LOG>),
           m_device(device),
@@ -29,23 +27,10 @@ WDDS::WDDS(const char *device, u_int channel, std::string configFile)
 // Destructor
 WDDS::~WDDS()
 {
-    delete m_rawInputQueue;
-    delete m_rawOutputQueue;
     delete m_parsedInputQueue;
     delete m_parsedOutputQueue;
 };
 
-void WDDS::SwapRawQueue()
-{
-    m_rawQueueMutex.lock();
-    // Critical section start
-    std::queue<Tins::PDU> *tmp;
-    tmp = m_rawInputQueue;
-    m_rawInputQueue = m_rawOutputQueue;
-    m_rawOutputQueue = tmp;
-    // Critical section end
-    m_rawQueueMutex.unlock();
-}
 
 void WDDS::SwapParsedQueue()
 {
@@ -59,23 +44,13 @@ void WDDS::SwapParsedQueue()
     m_parsedQueueMutex.unlock();
 }
 
-bool WDDS::PacketHandler(Tins::PDU& pdu)
-{
-    m_rawQueueMutex.lock();
-    // Critical section start
-    m_rawInputQueue->push(pdu);
-    // Critical section end
-    m_rawQueueMutex.unlock();
-    return true;
-}
-
 void WDDS::Scanning()
 {
     // Todo : Scanning with Scanner
     Scanner scanner(m_device.c_str());
     try{
         scanner.changeChannel(m_channel);
-        scanner.scanWithCallback(PacketHandler);
+        scanner.scanWithCallback(this, &WDDS::PacketHandler);
     }
     catch( ... )
     {
@@ -84,29 +59,26 @@ void WDDS::Scanning()
     }
 };
 
-void WDDS::Parsing()
+bool WDDS::PacketHandler(Tins::PDU& pdu)
 {
-    while(!m_endFlag)
-    {
-        std::this_thread::sleep_for(std::chrono::seconds(60));     // Sleep This thread 60 seconds
-        SwapRawQueue();
-        Tins::PDU pdu;
-        while (!m_rawOutputQueue->empty()) {
+    Parsing(pdu);
+    return true;
+}
 
-            pdu = m_rawOutputQueue->front();
-            // Todo : Parsing & Input Parsed data to Queue
-            WDDS_LOG wdds_log;
-            wdds_log.strength  = 10;
-            wdds_log.src_mac   = "AA:BB:CC:CC:BB:AA";
-            wdds_log.channel   = m_channel;
-            wdds_log.timestamp = 11111111;
-            //
-            //
-            m_parsedInputQueue->push(wdds_log);
-            m_rawOutputQueue->pop();
-        }
-        SwapParsedQueue();
-    }
+void WDDS::Parsing(Tins::PDU& pdu)
+{
+    // Todo : Parsing & Input Parsed data to Queue
+    WDDS_LOG wdds_log;
+    wdds_log.strength  = 10;
+    wdds_log.src_mac   = "AA:BB:CC:CC:BB:AA";
+    wdds_log.channel   = m_channel;
+    wdds_log.timestamp = 11111111;
+
+    m_parsedQueueMutex.lock();
+    // Critical section start
+    m_parsedInputQueue->push(wdds_log);
+    // Critical section end
+    m_parsedQueueMutex.unlock();
 }
 
 void WDDS::Logging()
@@ -116,34 +88,29 @@ void WDDS::Logging()
     while(!m_endFlag)
     {
         std::this_thread::sleep_for(std::chrono::seconds(10));    // Sleep This thread 10 seconds
-        WDDS_LOG parsed_packet;
-
+        SwapParsedQueue();  // Swap Input/Output Queue
         // Todo : Connect to DB
-        if ( conn.Initialize(m_DBServer, m_DBUser, m_DBPass, m_DBName, m_DBPort) )
+        if (  m_parsedOutputQueue->size() > 0 && conn.Initialize(m_DBServer, m_DBUser, m_DBPass, m_DBName, m_DBPort) )
         {
+            std::clog << "[*] Found Logs : " << m_parsedOutputQueue->size() << std::endl;
             if (conn.SetStmt()
                && conn.CreateBind(4)
                && conn.PrepareStmt(query))
             {
-                m_parsedQueueMutex.lock();
-                // Critical section start
-                while (!m_parsedOutputQueue->empty())
-                {
-                    parsed_packet = m_parsedOutputQueue->front();
+                while (!m_parsedOutputQueue->empty()) {
+                    WDDS_LOG parsed_packet = m_parsedOutputQueue->front();
                     // Todo : Logging data to DB
-                    conn.SetBind(0, MYSQL_TYPE_STRING, (char *)(&parsed_packet.src_mac), parsed_packet.src_mac.length(), 0, 0);
-                    conn.SetBind(1, MYSQL_TYPE_LONG, (char *)(&parsed_packet.channel), sizeof(unsigned long), 0, 0);
-                    conn.SetBind(2, MYSQL_TYPE_FLOAT, (char *)(&parsed_packet.strength), sizeof(float), 0, 0);
-                    conn.SetBind(3, MYSQL_TYPE_LONG, (char *)(&parsed_packet.channel), sizeof(unsigned long), 0, 0);
+                    conn.SetBind(0, MYSQL_TYPE_STRING, (char *)(parsed_packet.src_mac.c_str()),
+                                 parsed_packet.src_mac.length(), 0, 0);
+                    conn.SetBind(1, MYSQL_TYPE_LONG, (char *) (&parsed_packet.channel), sizeof(unsigned long), 0, 0);
+                    conn.SetBind(2, MYSQL_TYPE_FLOAT, (char *) (&parsed_packet.strength), sizeof(float), 0, 0);
+                    conn.SetBind(3, MYSQL_TYPE_LONG, (char *) (&parsed_packet.timestamp), sizeof(unsigned long), 0, 0);
 
-                    if ( !conn.execute() )
-                    {
+                    if (!conn.execute()) {
                         std::cerr << "[-] Error occurred in execute";
                     }
                     m_parsedOutputQueue->pop();
                 }
-                // Critical section end
-                m_parsedQueueMutex.unlock();
             }
             conn.Disconnection();
         };
@@ -154,12 +121,10 @@ void WDDS::Logging()
 void WDDS::start()
 {
     std::string input;
-    // Todo : Create Scanner/Parser/Logger Thread & when input, set m_endFlag true
-    std::thread hScanThread(&Scanning);
-    std::thread hParseThread(&Parsing);
-    std::thread hLogThread(&Logging);
+    // Todo : Create Scanner/Logger Thread & when input, set m_endFlag true
+    std::thread scanThread(&WDDS::Scanning, this);
+    std::thread logThread(&WDDS::Logging, this);
 
-    hScanThread.join();
-    hParseThread.join();
-    hLogThread.join();
+    scanThread.join();
+    logThread.join();
 }

@@ -16,13 +16,13 @@ Scanner::~Scanner()
 
 void Scanner::changeChannel(int channelTo) {
     char chan[64] = {0};
-    sprintf(chan, "iwconfig wlan0 channel %d", channelTo);
+    sprintf(chan, "iwconfig %s channel %d", m_device.c_str(), channelTo);
     system(chan);
     std::clog << "[*] Channel Changed To : " << chan << std::endl;
 }
 
-void Scanner::scanWithCallback(bool (*PacketCallbackHandler)(Tins::PDU&)) {
+void Scanner::scanWithCallback(WDDS *wdds, bool (WDDS::*PacketCallbackHandler)(Tins::PDU&)) {
     std::clog << "[*] Scanning Started" << std::endl;
     Tins::Sniffer sniffer(m_device, Tins::Sniffer::promisc_type::NON_PROMISC, "", true);
-    sniffer.sniff_loop(Tins::make_sniffer_handler(this, PacketCallbackHandler));
+    sniffer.sniff_loop(Tins::make_sniffer_handler(wdds, PacketCallbackHandler));
 }
