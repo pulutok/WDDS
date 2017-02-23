@@ -68,17 +68,24 @@ bool WDDS::PacketHandler(Tins::PDU& pdu)
 void WDDS::Parsing(Tins::PDU& pdu)
 {
     // Todo : Parsing & Input Parsed data to Queue
-    WDDS_LOG wdds_log;
-    wdds_log.strength  = 10;
-    wdds_log.src_mac   = "AA:BB:CC:CC:BB:AA";
-    wdds_log.channel   = m_channel;
-    wdds_log.timestamp = 11111111;
+    Tins::Dot11ProbeRequest *probeRequest;
+    if ( (probeRequest = pdu.find_pdu<Tins::Dot11ProbeRequest>()) )
+    {
+        Tins::RadioTap radioTap = pdu.rfind_pdu<Tins::RadioTap>();
 
-    m_parsedQueueMutex.lock();
-    // Critical section start
-    m_parsedInputQueue->push(wdds_log);
-    // Critical section end
-    m_parsedQueueMutex.unlock();
+        WDDS_LOG wdds_log;
+
+        wdds_log.strength  = radioTap.dbm_signal();
+        wdds_log.src_mac   = probeRequest->addr2().to_string(); // Source Address
+        wdds_log.channel   = ( ( radioTap.channel_freq() - 2412 ) / 5 ) + 1;
+        wdds_log.timestamp = static_cast<u_int>(std::time(0));
+
+        m_parsedQueueMutex.lock();
+        // Critical section start
+        m_parsedInputQueue->push(wdds_log);
+        // Critical section end
+        m_parsedQueueMutex.unlock();
+    }
 }
 
 void WDDS::Logging()
@@ -102,8 +109,8 @@ void WDDS::Logging()
                     // Todo : Logging data to DB
                     conn.SetBind(0, MYSQL_TYPE_STRING, (char *)(parsed_packet.src_mac.c_str()),
                                  parsed_packet.src_mac.length(), 0, 0);
-                    conn.SetBind(1, MYSQL_TYPE_LONG, (char *) (&parsed_packet.channel), sizeof(unsigned long), 0, 0);
-                    conn.SetBind(2, MYSQL_TYPE_FLOAT, (char *) (&parsed_packet.strength), sizeof(float), 0, 0);
+                    conn.SetBind(1, MYSQL_TYPE_LONG, (char *) (&parsed_packet.channel), sizeof(int32_t), 0, 0);
+                    conn.SetBind(2, MYSQL_TYPE_LONG, (char *) (&parsed_packet.strength), sizeof(int32_t), 0, 0);
                     conn.SetBind(3, MYSQL_TYPE_LONG, (char *) (&parsed_packet.timestamp), sizeof(unsigned long), 0, 0);
 
                     if (!conn.execute()) {

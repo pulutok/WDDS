@@ -28,8 +28,8 @@ typedef struct ieee80211_wlan_management {
 #pragma pack(pop)
 
 typedef struct wdds_log {
-    u_int channel;
+    int32_t channel;
     std::string src_mac;
-    float strength;
+    int32_t strength;
     u_int timestamp;
 } WDDS_LOG ;
